@@ -1,4 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_KEY
+);
 
 const DAYS = ["Mon 9/28","Tue 9/29","Wed 9/30","Thu 10/1","Fri 10/2","Sat 10/3"];
 const DAY_KEYS = ["mon","tue","wed","thu","fri","sat"];
@@ -15,108 +21,107 @@ const COLORS = {
 };
 
 const filled = (v) => v && v.trim() !== "";
-
-const mkDay = (v) => ({ mon: v, tue: v, wed: v, thu: v, fri: v, sat: v });
+const mkDay = (v) => ({ mon:v, tue:v, wed:v, thu:v, fri:v, sat:v });
 const empty = () => ({ mon:"", tue:"", wed:"", thu:"", fri:"", sat:"" });
 
 const INIT_ROLES = [
-  { id:1,  cat:"Leadership", role:"Community Liaison",            cc:"",  start:"8:00 AM",  end:"7:00 PM",  special:true,  assignments: mkDay("LaVar") },
-  { id:2,  cat:"Leadership", role:"Business Liaison",             cc:"",  start:"8:00 AM",  end:"7:00 PM",  special:true,  assignments: mkDay("Brooke") },
-  { id:3,  cat:"Leadership", role:"Shaking Hands",                cc:"",  start:"8:00 AM",  end:"7:00 PM",  special:true,  assignments: mkDay("Diallo") },
-  { id:4,  cat:"Leadership", role:"Security Lead",                cc:"",  start:"8:00 AM",  end:"7:00 PM",  special:true,  assignments: empty() },
-  { id:5,  cat:"Shuttle",    role:"Shuttle Bus Lead",             cc:"",  start:"10:00 AM", end:"3:30 PM",  special:true,  assignments: mkDay("Ted") },
-  { id:6,  cat:"Parking",    role:"Parking Attendant",            cc:"",  start:"10:00 AM", end:"12:00 PM", special:false, assignments: empty() },
-  { id:7,  cat:"Parking",    role:"Parking Attendant",            cc:"",  start:"10:00 AM", end:"12:00 PM", special:false, assignments: empty() },
-  { id:8,  cat:"Parking",    role:"Parking Attendant",            cc:"",  start:"10:00 AM", end:"12:00 PM", special:false, assignments: empty() },
-  { id:9,  cat:"Parking",    role:"Parking Attendant",            cc:"",  start:"10:00 AM", end:"12:00 PM", special:false, assignments: empty() },
-  { id:10, cat:"Parking",    role:"Parking Attendant",            cc:"",  start:"10:00 AM", end:"12:00 PM", special:false, assignments: empty() },
-  { id:11, cat:"Parking",    role:"Parking Attendant",            cc:"",  start:"10:00 AM", end:"12:00 PM", special:false, assignments: empty() },
-  { id:12, cat:"Parking",    role:"Parking Attendant",            cc:"",  start:"10:00 AM", end:"12:00 PM", special:false, assignments: empty() },
-  { id:16, cat:"Semi Truck", role:"Semi Truck Lead (AM)",         cc:"",  start:"8:00 AM",  end:"9:00 AM",  special:true,  assignments: mkDay("John") },
-  { id:17, cat:"Semi Truck", role:"Semi Truck Driver – Truck 1 (AM)", cc:"", start:"8:00 AM", end:"9:00 AM", special:true, assignments: empty() },
-  { id:18, cat:"Semi Truck", role:"Semi Truck Driver – Truck 2 (AM)", cc:"", start:"8:00 AM", end:"9:00 AM", special:true, assignments: empty() },
-  { id:19, cat:"B&B",        role:"B&B Lead/Floater",             cc:"",  start:"8:00 AM",  end:"5:00 PM",  special:true,  assignments: mkDay("Eddie") },
-  { id:20, cat:"Logistics",  role:"PortaJohn/Dumpster Lead",      cc:"",  start:"8:00 AM",  end:"10:00 AM", special:true,  assignments: empty() },
-  { id:21, cat:"Logistics",  role:"Brush Pile Documenter",        cc:"",  start:"11:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
-  { id:22, cat:"Logistics",  role:"PortaJohn Mover",              cc:"",  start:"8:00 AM",  end:"9:00 AM",  special:true,  assignments: mkDay("Jason") },
-  { id:23, cat:"Signage",    role:"Stake & Sign Team Lead A",     cc:"",  start:"8:30 AM",  end:"10:30 AM", special:true,  assignments: empty() },
-  { id:24, cat:"Signage",    role:"Stake & Sign Team Lead B",     cc:"",  start:"8:30 AM",  end:"10:30 AM", special:true,  assignments: empty() },
-  { id:25, cat:"Signage",    role:"Stake Team Member",            cc:"A1",start:"9:00 AM",  end:"10:30 AM", special:false, assignments: empty() },
-  { id:27, cat:"Signage",    role:"Stake Team Member",            cc:"B1",start:"9:00 AM",  end:"10:30 AM", special:false, assignments: empty() },
-  { id:29, cat:"Signage",    role:"HQ Signage Lead",              cc:"",  start:"8:00 AM",  end:"9:00 AM",  special:true,  assignments: empty() },
-  { id:32, cat:"CC-A",       role:"CC A People Lead",             cc:"",  start:"8:30 AM",  end:"6:00 PM",  special:true,  assignments: mkDay("Greg") },
-  { id:33, cat:"CC-A",       role:"CC A Equipment Lead",          cc:"",  start:"8:30 AM",  end:"6:00 PM",  special:true,  assignments: mkDay("Jill") },
-  { id:34, cat:"CC-A",       role:"CC A Equip Unload/Prep",       cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:35, cat:"CC-A",       role:"CC A Equip Unload/Prep",       cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:36, cat:"CC-A",       role:"CC A Equip Unload/Prep",       cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:37, cat:"CC-A",       role:"CC A Equip Unload/Prep",       cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:38, cat:"CC-A",       role:"CC A Equip Unload/Prep",       cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:39, cat:"CC-A",       role:"CC A Equip Unload/Prep",       cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:40, cat:"CC-A",       role:"CC A Equip Unload/Prep",       cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:41, cat:"CC-A",       role:"CC A Equip Unload/Prep",       cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:42, cat:"CC-B",       role:"CC B People Lead",             cc:"",  start:"8:30 AM",  end:"6:00 PM",  special:true,  assignments: mkDay("Bob") },
-  { id:43, cat:"CC-B",       role:"CC B Equipment Lead",          cc:"",  start:"8:30 AM",  end:"6:00 PM",  special:true,  assignments: mkDay("Kris") },
-  { id:44, cat:"CC-B",       role:"CC B Equip Unload/Prep",       cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:45, cat:"CC-B",       role:"CC B Equip Unload/Prep",       cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:46, cat:"CC-B",       role:"CC B Equip Unload/Prep",       cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:47, cat:"CC-B",       role:"CC B Equip Unload/Prep",       cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:48, cat:"CC-B",       role:"CC B Equip Unload/Prep",       cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:49, cat:"CC-B",       role:"CC B Equip Unload/Prep",       cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:50, cat:"CC-B",       role:"CC B Equip Unload/Prep",       cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:51, cat:"CC-B",       role:"CC B Equip Unload/Prep",       cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
-  { id:52, cat:"Equipment",  role:"Large Equipment Lead",          cc:"",  start:"9:00 AM",  end:"6:00 PM",  special:true,  assignments: mkDay("John") },
-  { id:53, cat:"Equipment",  role:"Large Equipment Prep",          cc:"",  start:"9:00 AM",  end:"12:00 PM", special:true,  assignments: empty() },
-  { id:54, cat:"Equipment",  role:"Large Equipment Prep",          cc:"",  start:"9:00 AM",  end:"12:00 PM", special:true,  assignments: empty() },
-  { id:55, cat:"Catering",   role:"Key Volunteer Lunch Prep & Serve", cc:"", start:"11:00 AM", end:"1:00 PM", special:true, assignments: empty() },
-  { id:57, cat:"Registration",role:"Registration Lead",           cc:"",  start:"9:30 AM",  end:"2:00 PM",  special:true,  assignments: empty() },
-  { id:58, cat:"Registration",role:"Registration",                cc:"",  start:"9:30 AM",  end:"2:00 PM",  special:false, assignments: empty() },
-  { id:59, cat:"Registration",role:"Registration",                cc:"",  start:"9:30 AM",  end:"2:00 PM",  special:false, assignments: empty() },
-  { id:61, cat:"CC-A",       role:"CC A Small Equip Repair Lead", cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: mkDay("Nancy & Mark") },
-  { id:62, cat:"CC-A",       role:"CC A Small Equip Repair",      cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
-  { id:63, cat:"CC-A",       role:"CC A Small Equip Repair",      cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
-  { id:64, cat:"CC-A",       role:"CC A Small Equip Repair",      cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
-  { id:65, cat:"CC-A",       role:"CC A Small Equip Repair",      cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
-  { id:66, cat:"CC-A",       role:"CC A Small Equip Repair",      cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
-  { id:67, cat:"CC-A",       role:"CC A Small Equip Repair",      cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
-  { id:69, cat:"CC-A",       role:"CC A Small Equip Repair",      cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
-  { id:70, cat:"CC-A",       role:"CC A Small Equip Repair",      cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
-  { id:71, cat:"CC-A",       role:"CC A Small Equip Repair",      cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
-  { id:72, cat:"CC-B",       role:"CC B Small Equip Repair Lead", cc:"",  start:"12:00 PM", end:"5:00 PM",  special:true,  assignments: mkDay("Boone & Eric") },
-  { id:73, cat:"CC-B",       role:"CC B Small Equip Repair",      cc:"B2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
-  { id:74, cat:"CC-B",       role:"CC B Small Equip Repair",      cc:"B2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
-  { id:75, cat:"CC-B",       role:"CC B Small Equip Repair",      cc:"B2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
-  { id:76, cat:"CC-B",       role:"CC B Small Equip Repair",      cc:"B2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
-  { id:77, cat:"CC-B",       role:"CC B Small Equip Repair",      cc:"B2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
-  { id:78, cat:"CC-B",       role:"CC B Small Equip Repair",      cc:"B2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
-  { id:79, cat:"CC-A",       role:"CC A Equip Swap Driver",       cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
-  { id:80, cat:"CC-A",       role:"CC A Equip Swap Loader",       cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
-  { id:81, cat:"CC-B",       role:"CC B Equip Swap Driver",       cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
-  { id:82, cat:"CC-B",       role:"CC B Equip Swap Loader",       cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
-  { id:83, cat:"CC-A",       role:"CC A Equipment Load",          cc:"A3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
-  { id:84, cat:"CC-A",       role:"CC A Equipment Load",          cc:"A3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
-  { id:85, cat:"CC-A",       role:"CC A Equipment Load",          cc:"A3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
-  { id:86, cat:"CC-A",       role:"CC A Equipment Load",          cc:"A3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
-  { id:87, cat:"CC-A",       role:"CC A Equipment Load",          cc:"A3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
-  { id:88, cat:"CC-B",       role:"CC B Equipment Load",          cc:"B3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
-  { id:89, cat:"CC-B",       role:"CC B Equipment Load",          cc:"B3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
-  { id:90, cat:"CC-B",       role:"CC B Equipment Load",          cc:"B3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
-  { id:91, cat:"CC-B",       role:"CC B Equipment Load",          cc:"B3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
-  { id:92, cat:"CC-B",       role:"CC B Equipment Load",          cc:"B3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
-  { id:93, cat:"CC-B",       role:"CC B Equipment Load",          cc:"",  start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
-  { id:94, cat:"Semi Truck", role:"Semi Truck Lead (PM)",         cc:"",  start:"5:00 PM",  end:"6:00 PM",  special:true,  assignments: mkDay("Kelsey") },
-  { id:95, cat:"Semi Truck", role:"Semi Truck Driver – Truck 1 (PM)", cc:"", start:"5:00 PM", end:"6:00 PM", special:true, assignments: empty() },
-  { id:96, cat:"Equipment",  role:"Large Equip Lockdown",         cc:"",  start:"5:00 PM",  end:"6:00 PM",  special:true,  assignments: mkDay("John") },
-  { id:97, cat:"Leadership", role:"Security Lead (PM)",           cc:"",  start:"5:00 PM",  end:"7:00 PM",  special:true,  assignments: mkDay("Kelsey") },
-  { id:98, cat:"Floater",    role:"Floater",                      cc:"",  start:"8:00 AM",  end:"5:00 PM",  special:true,  assignments: empty() },
-  { id:99, cat:"Floater",    role:"Floater",                      cc:"",  start:"8:00 AM",  end:"2:00 PM",  special:true,  assignments: empty() },
-  { id:102,cat:"Media",      role:"Photographer",                 cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
-  { id:103,cat:"Media",      role:"Photographer",                 cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
-  { id:104,cat:"Media",      role:"Photographer",                 cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
-  { id:105,cat:"Media",      role:"Videographer",                 cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
-  { id:106,cat:"Media",      role:"Videographer",                 cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
-  { id:107,cat:"Special",    role:"Denby Special Projects Lead",  cc:"",  start:"9:00 AM",  end:"5:00 PM",  special:true,  assignments: empty() },
-  { id:109,cat:"Special",    role:"Denby Special Project Company Group", cc:"", start:"11:00 AM", end:"5:00 PM", special:true, assignments: empty() },
-  { id:110,cat:"Special",    role:"Anchor Ring Doorbells Company",cc:"",  start:"11:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
+  { id:1,  cat:"Leadership",   role:"Community Liaison",                  cc:"",  start:"8:00 AM",  end:"7:00 PM",  special:true,  assignments: mkDay("LaVar") },
+  { id:2,  cat:"Leadership",   role:"Business Liaison",                   cc:"",  start:"8:00 AM",  end:"7:00 PM",  special:true,  assignments: mkDay("Brooke") },
+  { id:3,  cat:"Leadership",   role:"Shaking Hands",                      cc:"",  start:"8:00 AM",  end:"7:00 PM",  special:true,  assignments: mkDay("Diallo") },
+  { id:4,  cat:"Leadership",   role:"Security Lead",                      cc:"",  start:"8:00 AM",  end:"7:00 PM",  special:true,  assignments: empty() },
+  { id:5,  cat:"Shuttle",      role:"Shuttle Bus Lead",                   cc:"",  start:"10:00 AM", end:"3:30 PM",  special:true,  assignments: mkDay("Ted") },
+  { id:6,  cat:"Parking",      role:"Parking Attendant",                  cc:"",  start:"10:00 AM", end:"12:00 PM", special:false, assignments: empty() },
+  { id:7,  cat:"Parking",      role:"Parking Attendant",                  cc:"",  start:"10:00 AM", end:"12:00 PM", special:false, assignments: empty() },
+  { id:8,  cat:"Parking",      role:"Parking Attendant",                  cc:"",  start:"10:00 AM", end:"12:00 PM", special:false, assignments: empty() },
+  { id:9,  cat:"Parking",      role:"Parking Attendant",                  cc:"",  start:"10:00 AM", end:"12:00 PM", special:false, assignments: empty() },
+  { id:10, cat:"Parking",      role:"Parking Attendant",                  cc:"",  start:"10:00 AM", end:"12:00 PM", special:false, assignments: empty() },
+  { id:11, cat:"Parking",      role:"Parking Attendant",                  cc:"",  start:"10:00 AM", end:"12:00 PM", special:false, assignments: empty() },
+  { id:12, cat:"Parking",      role:"Parking Attendant",                  cc:"",  start:"10:00 AM", end:"12:00 PM", special:false, assignments: empty() },
+  { id:16, cat:"Semi Truck",   role:"Semi Truck Lead (AM)",               cc:"",  start:"8:00 AM",  end:"9:00 AM",  special:true,  assignments: mkDay("John") },
+  { id:17, cat:"Semi Truck",   role:"Semi Truck Driver – Truck 1 (AM)",   cc:"",  start:"8:00 AM",  end:"9:00 AM",  special:true,  assignments: empty() },
+  { id:18, cat:"Semi Truck",   role:"Semi Truck Driver – Truck 2 (AM)",   cc:"",  start:"8:00 AM",  end:"9:00 AM",  special:true,  assignments: empty() },
+  { id:19, cat:"B&B",          role:"B&B Lead/Floater",                   cc:"",  start:"8:00 AM",  end:"5:00 PM",  special:true,  assignments: mkDay("Eddie") },
+  { id:20, cat:"Logistics",    role:"PortaJohn/Dumpster Lead",            cc:"",  start:"8:00 AM",  end:"10:00 AM", special:true,  assignments: empty() },
+  { id:21, cat:"Logistics",    role:"Brush Pile Documenter",              cc:"",  start:"11:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
+  { id:22, cat:"Logistics",    role:"PortaJohn Mover",                    cc:"",  start:"8:00 AM",  end:"9:00 AM",  special:true,  assignments: mkDay("Jason") },
+  { id:23, cat:"Signage",      role:"Stake & Sign Team Lead A",           cc:"",  start:"8:30 AM",  end:"10:30 AM", special:true,  assignments: empty() },
+  { id:24, cat:"Signage",      role:"Stake & Sign Team Lead B",           cc:"",  start:"8:30 AM",  end:"10:30 AM", special:true,  assignments: empty() },
+  { id:25, cat:"Signage",      role:"Stake Team Member",                  cc:"A1",start:"9:00 AM",  end:"10:30 AM", special:false, assignments: empty() },
+  { id:27, cat:"Signage",      role:"Stake Team Member",                  cc:"B1",start:"9:00 AM",  end:"10:30 AM", special:false, assignments: empty() },
+  { id:29, cat:"Signage",      role:"HQ Signage Lead",                    cc:"",  start:"8:00 AM",  end:"9:00 AM",  special:true,  assignments: empty() },
+  { id:32, cat:"CC-A",         role:"CC A People Lead",                   cc:"",  start:"8:30 AM",  end:"6:00 PM",  special:true,  assignments: mkDay("Greg") },
+  { id:33, cat:"CC-A",         role:"CC A Equipment Lead",                cc:"",  start:"8:30 AM",  end:"6:00 PM",  special:true,  assignments: mkDay("Jill") },
+  { id:34, cat:"CC-A",         role:"CC A Equip Unload/Prep",             cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:35, cat:"CC-A",         role:"CC A Equip Unload/Prep",             cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:36, cat:"CC-A",         role:"CC A Equip Unload/Prep",             cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:37, cat:"CC-A",         role:"CC A Equip Unload/Prep",             cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:38, cat:"CC-A",         role:"CC A Equip Unload/Prep",             cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:39, cat:"CC-A",         role:"CC A Equip Unload/Prep",             cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:40, cat:"CC-A",         role:"CC A Equip Unload/Prep",             cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:41, cat:"CC-A",         role:"CC A Equip Unload/Prep",             cc:"A1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:42, cat:"CC-B",         role:"CC B People Lead",                   cc:"",  start:"8:30 AM",  end:"6:00 PM",  special:true,  assignments: mkDay("Bob") },
+  { id:43, cat:"CC-B",         role:"CC B Equipment Lead",                cc:"",  start:"8:30 AM",  end:"6:00 PM",  special:true,  assignments: mkDay("Kris") },
+  { id:44, cat:"CC-B",         role:"CC B Equip Unload/Prep",             cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:45, cat:"CC-B",         role:"CC B Equip Unload/Prep",             cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:46, cat:"CC-B",         role:"CC B Equip Unload/Prep",             cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:47, cat:"CC-B",         role:"CC B Equip Unload/Prep",             cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:48, cat:"CC-B",         role:"CC B Equip Unload/Prep",             cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:49, cat:"CC-B",         role:"CC B Equip Unload/Prep",             cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:50, cat:"CC-B",         role:"CC B Equip Unload/Prep",             cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:51, cat:"CC-B",         role:"CC B Equip Unload/Prep",             cc:"B1",start:"9:00 AM",  end:"12:00 PM", special:false, assignments: empty() },
+  { id:52, cat:"Equipment",    role:"Large Equipment Lead",               cc:"",  start:"9:00 AM",  end:"6:00 PM",  special:true,  assignments: mkDay("John") },
+  { id:53, cat:"Equipment",    role:"Large Equipment Prep",               cc:"",  start:"9:00 AM",  end:"12:00 PM", special:true,  assignments: empty() },
+  { id:54, cat:"Equipment",    role:"Large Equipment Prep",               cc:"",  start:"9:00 AM",  end:"12:00 PM", special:true,  assignments: empty() },
+  { id:55, cat:"Catering",     role:"Key Volunteer Lunch Prep & Serve",   cc:"",  start:"11:00 AM", end:"1:00 PM",  special:true,  assignments: empty() },
+  { id:57, cat:"Registration", role:"Registration Lead",                  cc:"",  start:"9:30 AM",  end:"2:00 PM",  special:true,  assignments: empty() },
+  { id:58, cat:"Registration", role:"Registration",                       cc:"",  start:"9:30 AM",  end:"2:00 PM",  special:false, assignments: empty() },
+  { id:59, cat:"Registration", role:"Registration",                       cc:"",  start:"9:30 AM",  end:"2:00 PM",  special:false, assignments: empty() },
+  { id:61, cat:"CC-A",         role:"CC A Small Equip Repair Lead",       cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: mkDay("Nancy & Mark") },
+  { id:62, cat:"CC-A",         role:"CC A Small Equip Repair",            cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
+  { id:63, cat:"CC-A",         role:"CC A Small Equip Repair",            cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
+  { id:64, cat:"CC-A",         role:"CC A Small Equip Repair",            cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
+  { id:65, cat:"CC-A",         role:"CC A Small Equip Repair",            cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
+  { id:66, cat:"CC-A",         role:"CC A Small Equip Repair",            cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
+  { id:67, cat:"CC-A",         role:"CC A Small Equip Repair",            cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
+  { id:69, cat:"CC-A",         role:"CC A Small Equip Repair",            cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
+  { id:70, cat:"CC-A",         role:"CC A Small Equip Repair",            cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
+  { id:71, cat:"CC-A",         role:"CC A Small Equip Repair",            cc:"A2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
+  { id:72, cat:"CC-B",         role:"CC B Small Equip Repair Lead",       cc:"",  start:"12:00 PM", end:"5:00 PM",  special:true,  assignments: mkDay("Boone & Eric") },
+  { id:73, cat:"CC-B",         role:"CC B Small Equip Repair",            cc:"B2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
+  { id:74, cat:"CC-B",         role:"CC B Small Equip Repair",            cc:"B2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
+  { id:75, cat:"CC-B",         role:"CC B Small Equip Repair",            cc:"B2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
+  { id:76, cat:"CC-B",         role:"CC B Small Equip Repair",            cc:"B2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
+  { id:77, cat:"CC-B",         role:"CC B Small Equip Repair",            cc:"B2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
+  { id:78, cat:"CC-B",         role:"CC B Small Equip Repair",            cc:"B2",start:"12:00 PM", end:"5:00 PM",  special:false, assignments: empty() },
+  { id:79, cat:"CC-A",         role:"CC A Equip Swap Driver",             cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
+  { id:80, cat:"CC-A",         role:"CC A Equip Swap Loader",             cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
+  { id:81, cat:"CC-B",         role:"CC B Equip Swap Driver",             cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
+  { id:82, cat:"CC-B",         role:"CC B Equip Swap Loader",             cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
+  { id:83, cat:"CC-A",         role:"CC A Equipment Load",                cc:"A3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
+  { id:84, cat:"CC-A",         role:"CC A Equipment Load",                cc:"A3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
+  { id:85, cat:"CC-A",         role:"CC A Equipment Load",                cc:"A3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
+  { id:86, cat:"CC-A",         role:"CC A Equipment Load",                cc:"A3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
+  { id:87, cat:"CC-A",         role:"CC A Equipment Load",                cc:"A3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
+  { id:88, cat:"CC-B",         role:"CC B Equipment Load",                cc:"B3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
+  { id:89, cat:"CC-B",         role:"CC B Equipment Load",                cc:"B3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
+  { id:90, cat:"CC-B",         role:"CC B Equipment Load",                cc:"B3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
+  { id:91, cat:"CC-B",         role:"CC B Equipment Load",                cc:"B3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
+  { id:92, cat:"CC-B",         role:"CC B Equipment Load",                cc:"B3",start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
+  { id:93, cat:"CC-B",         role:"CC B Equipment Load",                cc:"",  start:"3:30 PM",  end:"5:00 PM",  special:false, assignments: empty() },
+  { id:94, cat:"Semi Truck",   role:"Semi Truck Lead (PM)",               cc:"",  start:"5:00 PM",  end:"6:00 PM",  special:true,  assignments: mkDay("Kelsey") },
+  { id:95, cat:"Semi Truck",   role:"Semi Truck Driver – Truck 1 (PM)",   cc:"",  start:"5:00 PM",  end:"6:00 PM",  special:true,  assignments: empty() },
+  { id:96, cat:"Equipment",    role:"Large Equip Lockdown",               cc:"",  start:"5:00 PM",  end:"6:00 PM",  special:true,  assignments: mkDay("John") },
+  { id:97, cat:"Leadership",   role:"Security Lead (PM)",                 cc:"",  start:"5:00 PM",  end:"7:00 PM",  special:true,  assignments: mkDay("Kelsey") },
+  { id:98, cat:"Floater",      role:"Floater",                            cc:"",  start:"8:00 AM",  end:"5:00 PM",  special:true,  assignments: empty() },
+  { id:99, cat:"Floater",      role:"Floater",                            cc:"",  start:"8:00 AM",  end:"2:00 PM",  special:true,  assignments: empty() },
+  { id:102,cat:"Media",        role:"Photographer",                       cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
+  { id:103,cat:"Media",        role:"Photographer",                       cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
+  { id:104,cat:"Media",        role:"Photographer",                       cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
+  { id:105,cat:"Media",        role:"Videographer",                       cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
+  { id:106,cat:"Media",        role:"Videographer",                       cc:"",  start:"10:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
+  { id:107,cat:"Special",      role:"Denby Special Projects Lead",        cc:"",  start:"9:00 AM",  end:"5:00 PM",  special:true,  assignments: empty() },
+  { id:109,cat:"Special",      role:"Denby Special Project Company Group",cc:"",  start:"11:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
+  { id:110,cat:"Special",      role:"Anchor Ring Doorbells Company",      cc:"",  start:"11:00 AM", end:"5:00 PM",  special:true,  assignments: empty() },
 ];
 
 const CAT_COLORS = {
@@ -139,26 +144,59 @@ const TABS = ["Tracker", "Dashboard", "Reminders"];
 
 export default function App() {
   const [roles, setRoles] = useState(INIT_ROLES);
+  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState(0);
   const [filterCat, setFilterCat] = useState("All");
   const [filterDay, setFilterDay] = useState("All");
   const [showOnlyEmpty, setShowOnlyEmpty] = useState(false);
-  const [editing, setEditing] = useState(null); // { id, day }
+  const [editing, setEditing] = useState(null);
   const [editVal, setEditVal] = useState("");
-
-  // reminders
   const [reminderDay, setReminderDay] = useState("mon");
   const [reminderLoading, setReminderLoading] = useState(false);
   const [reminderPreviews, setReminderPreviews] = useState([]);
   const [reminderSent, setReminderSent] = useState(false);
   const [toast, setToast] = useState(null);
 
+  // Load saved assignments from Supabase on mount
+  useEffect(() => {
+    async function load() {
+      const { data, error } = await supabase.from("assignments").select("*");
+      if (error) { console.error(error); setLoading(false); return; }
+      if (data && data.length > 0) {
+        setRoles(prev => prev.map(r => {
+          const updated = { ...r, assignments: { ...r.assignments } };
+          data.forEach(row => {
+            if (row.role_id === r.id) updated.assignments[row.day] = row.volunteer;
+          });
+          return updated;
+        }));
+      }
+      setLoading(false);
+    }
+    load();
+
+    // Subscribe to real-time changes
+    const channel = supabase.channel("assignments")
+      .on("postgres_changes", { event: "*", schema: "public", table: "assignments" }, payload => {
+        const row = payload.new;
+        if (!row) return;
+        setRoles(prev => prev.map(r =>
+          r.id === row.role_id
+            ? { ...r, assignments: { ...r.assignments, [row.day]: row.volunteer } }
+            : r
+        ));
+      })
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, []);
+
   const cats = useMemo(() => ["All", ...Array.from(new Set(INIT_ROLES.map(r => r.cat)))], []);
 
   const filtered = useMemo(() => roles.filter(r => {
     if (filterCat !== "All" && r.cat !== filterCat) return false;
     if (showOnlyEmpty) {
-      const days = filterDay === "All" ? DAY_KEYS : [DAY_KEYS[DAYS.indexOf(filterDay)] ?? filterDay];
+      const days = filterDay === "All" ? DAY_KEYS : [DAY_KEYS[DAYS.indexOf(filterDay)]].filter(Boolean);
       return days.some(d => !filled(r.assignments[d]));
     }
     return true;
@@ -176,31 +214,50 @@ export default function App() {
     return { label: DAYS[i], f, t, pct: Math.round(f / t * 100) };
   }), [roles]);
 
+  function showToast(msg, color = "green") {
+    setToast({ msg, color });
+    setTimeout(() => setToast(null), 2800);
+  }
+
   function startEdit(id, day, cur) {
     setEditing({ id, day });
     setEditVal(cur);
   }
 
-  function commitEdit() {
+  async function commitEdit() {
     if (!editing) return;
-    setRoles(p => p.map(r => r.id === editing.id
-      ? { ...r, assignments: { ...r.assignments, [editing.day]: editVal.trim() } }
-      : r
+    const { id, day } = editing;
+    const volunteer = editVal.trim();
+
+    // Optimistic update
+    setRoles(prev => prev.map(r =>
+      r.id === id ? { ...r, assignments: { ...r.assignments, [day]: volunteer } } : r
     ));
     setEditing(null);
+
+    // Check if row exists
+    const { data } = await supabase.from("assignments").select("id").eq("role_id", id).eq("day", day);
+    if (data && data.length > 0) {
+      await supabase.from("assignments").update({ volunteer, updated_at: new Date() }).eq("role_id", id).eq("day", day);
+    } else {
+      await supabase.from("assignments").insert({ role_id: id, day, volunteer });
+    }
   }
 
-  function copyDayAcrossWeek(id, srcDay) {
+  async function copyDayAcrossWeek(id, srcDay) {
     const role = roles.find(r => r.id === id);
     const val = role?.assignments[srcDay] || "";
     if (!val) return;
-    setRoles(p => p.map(r => r.id === id ? { ...r, assignments: mkDay(val) } : r));
+    setRoles(prev => prev.map(r => r.id === id ? { ...r, assignments: mkDay(val) } : r));
     showToast(`Copied "${val}" across all days`);
-  }
-
-  function showToast(msg, color = "green") {
-    setToast({ msg, color });
-    setTimeout(() => setToast(null), 2800);
+    for (const day of DAY_KEYS) {
+      const { data } = await supabase.from("assignments").select("id").eq("role_id", id).eq("day", day);
+      if (data && data.length > 0) {
+        await supabase.from("assignments").update({ volunteer: val, updated_at: new Date() }).eq("role_id", id).eq("day", day);
+      } else {
+        await supabase.from("assignments").insert({ role_id: id, day, volunteer: val });
+      }
+    }
   }
 
   async function generateReminders() {
@@ -211,14 +268,12 @@ export default function App() {
     setReminderLoading(true);
     setReminderPreviews([]);
     setReminderSent(false);
-
     const groups = {};
     assigned.forEach(r => {
       const name = r.assignments[reminderDay];
       if (!groups[name]) groups[name] = [];
       groups[name].push(r);
     });
-
     const previews = await Promise.all(Object.entries(groups).map(async ([name, rs]) => {
       const roleList = rs.map(r => `• ${r.role} (${r.start}–${r.end})`).join("\n");
       const body = await (async () => {
@@ -238,7 +293,6 @@ export default function App() {
       })();
       return { name, roles: rs, dayLabel, subject: `Reminder: Your shift on ${dayLabel}`, body };
     }));
-
     setReminderPreviews(previews);
     setReminderLoading(false);
   }
@@ -248,14 +302,17 @@ export default function App() {
     showToast(`${reminderPreviews.length} reminder${reminderPreviews.length > 1 ? "s" : ""} sent`, "teal");
   }
 
-  const visibleDays = filterDay === "All" ? DAY_KEYS : [DAY_KEYS[DAYS.findIndex(d => d === filterDay)]].filter(Boolean);
+  if (loading) return (
+    <div style={{ fontFamily: "sans-serif", padding: "2rem", color: "#888", textAlign: "center" }}>
+      Loading assignments…
+    </div>
+  );
 
   return (
-    <div style={{ fontFamily: "var(--font-sans)", color: "var(--color-text-primary)", padding: "0.75rem 0" }}>
-      {/* Header */}
+    <div style={{ fontFamily: "sans-serif", color: "#1a1a1a", padding: "1rem", maxWidth: 1100, margin: "0 auto" }}>
       <div style={{ marginBottom: "1rem" }}>
-        <h1 style={{ fontSize: 18, fontWeight: 500, margin: 0 }}>2026 Key Volunteer Tracker</h1>
-        <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>Sept 28 – Oct 3 · {roles.length} roles</p>
+        <h1 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>2026 Key Volunteer Tracker</h1>
+        <p style={{ fontSize: 12, color: "#888", margin: "2px 0 0" }}>Life Remodeled · Sept 28 – Oct 3 · {roles.length} roles · changes save automatically</p>
       </div>
 
       {toast && (
@@ -266,50 +323,43 @@ export default function App() {
         }}>{toast.msg}</div>
       )}
 
-      {/* Tabs */}
-      <div style={{ display: "flex", gap: 2, borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: "1rem" }}>
+      <div style={{ display: "flex", gap: 2, borderBottom: "1px solid #e5e5e5", marginBottom: "1rem" }}>
         {TABS.map((t, i) => (
           <button key={t} onClick={() => setTab(i)} style={{
             background: "none", border: "none",
-            borderBottom: tab === i ? "2px solid var(--color-text-primary)" : "2px solid transparent",
-            padding: "5px 12px", fontWeight: tab === i ? 500 : 400, cursor: "pointer",
-            color: tab === i ? "var(--color-text-primary)" : "var(--color-text-secondary)",
-            marginBottom: -1, fontSize: 13
+            borderBottom: tab === i ? "2px solid #1a1a1a" : "2px solid transparent",
+            padding: "5px 12px", fontWeight: tab === i ? 600 : 400, cursor: "pointer",
+            color: tab === i ? "#1a1a1a" : "#888", marginBottom: -1, fontSize: 13
           }}>{t}</button>
         ))}
       </div>
 
-      {/* ── TRACKER ── */}
+      {/* TRACKER */}
       {tab === 0 && (
         <div>
-          {/* Filters */}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: "0.75rem", alignItems: "center" }}>
-            <select value={filterCat} onChange={e => setFilterCat(e.target.value)} style={{ fontSize: 12, padding: "4px 8px" }}>
+            <select value={filterCat} onChange={e => setFilterCat(e.target.value)} style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, border: "1px solid #ddd" }}>
               {cats.map(c => <option key={c}>{c}</option>)}
             </select>
-            <select value={filterDay} onChange={e => setFilterDay(e.target.value)} style={{ fontSize: 12, padding: "4px 8px" }}>
+            <select value={filterDay} onChange={e => setFilterDay(e.target.value)} style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, border: "1px solid #ddd" }}>
               <option value="All">All days</option>
               {DAYS.map(d => <option key={d}>{d}</option>)}
             </select>
             <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, cursor: "pointer" }}>
               <input type="checkbox" checked={showOnlyEmpty} onChange={e => setShowOnlyEmpty(e.target.checked)} />
-              Show unfilled only
+              Unfilled only
             </label>
-            <span style={{ fontSize: 12, color: "var(--color-text-secondary)", marginLeft: "auto" }}>
-              {filtered.length} roles · click a cell to assign
-            </span>
+            <span style={{ fontSize: 12, color: "#888", marginLeft: "auto" }}>{filtered.length} roles · click cell to assign · double-click to copy across week</span>
           </div>
-
-          {/* Table */}
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
               <thead>
-                <tr style={{ background: "var(--color-background-secondary)" }}>
-                  <th style={{ textAlign: "left", padding: "6px 8px", fontWeight: 500, whiteSpace: "nowrap", borderBottom: "0.5px solid var(--color-border-tertiary)", position: "sticky", left: 0, background: "var(--color-background-secondary)", minWidth: 180 }}>Role</th>
-                  <th style={{ textAlign: "center", padding: "6px 4px", fontWeight: 400, color: "var(--color-text-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)", whiteSpace: "nowrap", minWidth: 40 }}>CC</th>
-                  <th style={{ textAlign: "center", padding: "6px 4px", fontWeight: 400, color: "var(--color-text-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)", whiteSpace: "nowrap", minWidth: 80 }}>Hours</th>
+                <tr style={{ background: "#f9f9f9" }}>
+                  <th style={{ textAlign: "left", padding: "6px 8px", fontWeight: 600, borderBottom: "1px solid #e5e5e5", position: "sticky", left: 0, background: "#f9f9f9", minWidth: 180 }}>Role</th>
+                  <th style={{ textAlign: "center", padding: "6px 4px", fontWeight: 400, color: "#888", borderBottom: "1px solid #e5e5e5", minWidth: 36 }}>CC</th>
+                  <th style={{ textAlign: "center", padding: "6px 4px", fontWeight: 400, color: "#888", borderBottom: "1px solid #e5e5e5", whiteSpace: "nowrap", minWidth: 80 }}>Hours</th>
                   {(filterDay === "All" ? DAYS : DAYS.filter(d => d === filterDay)).map(d => (
-                    <th key={d} style={{ textAlign: "center", padding: "6px 6px", fontWeight: 500, borderBottom: "0.5px solid var(--color-border-tertiary)", whiteSpace: "nowrap", minWidth: 90 }}>{d}</th>
+                    <th key={d} style={{ textAlign: "center", padding: "6px 6px", fontWeight: 600, borderBottom: "1px solid #e5e5e5", whiteSpace: "nowrap", minWidth: 90 }}>{d}</th>
                   ))}
                 </tr>
               </thead>
@@ -318,21 +368,21 @@ export default function App() {
                   const catColor = CAT_COLORS[r.cat] || "gray";
                   const days = filterDay === "All" ? DAY_KEYS : [DAY_KEYS[DAYS.findIndex(d => d === filterDay)]].filter(Boolean);
                   return (
-                    <tr key={r.id} style={{ background: idx % 2 === 0 ? "transparent" : "var(--color-background-secondary)" }}>
-                      <td style={{ padding: "5px 8px", borderBottom: "0.5px solid var(--color-border-tertiary)", position: "sticky", left: 0, background: idx % 2 === 0 ? "var(--color-background-primary)" : "var(--color-background-secondary)" }}>
+                    <tr key={r.id} style={{ background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>
+                      <td style={{ padding: "5px 8px", borderBottom: "1px solid #f0f0f0", position: "sticky", left: 0, background: idx % 2 === 0 ? "#fff" : "#fafafa" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                           {r.special && <span style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS[catColor].text, flexShrink: 0, display: "inline-block" }} />}
-                          <span style={{ color: "var(--color-text-primary)" }}>{r.role}</span>
+                          <span>{r.role}</span>
                         </div>
-                        <div style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>{r.cat}</div>
+                        <div style={{ fontSize: 11, color: "#aaa" }}>{r.cat}</div>
                       </td>
-                      <td style={{ textAlign: "center", padding: "5px 4px", borderBottom: "0.5px solid var(--color-border-tertiary)", color: "var(--color-text-secondary)" }}>{r.cc || "—"}</td>
-                      <td style={{ textAlign: "center", padding: "5px 4px", borderBottom: "0.5px solid var(--color-border-tertiary)", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>{r.start}–{r.end}</td>
+                      <td style={{ textAlign: "center", padding: "5px 4px", borderBottom: "1px solid #f0f0f0", color: "#aaa" }}>{r.cc || "—"}</td>
+                      <td style={{ textAlign: "center", padding: "5px 4px", borderBottom: "1px solid #f0f0f0", color: "#aaa", whiteSpace: "nowrap" }}>{r.start}–{r.end}</td>
                       {days.map(d => {
                         const val = r.assignments[d];
                         const isEditing = editing?.id === r.id && editing?.day === d;
                         return (
-                          <td key={d} style={{ padding: "3px 4px", borderBottom: "0.5px solid var(--color-border-tertiary)", textAlign: "center" }}>
+                          <td key={d} style={{ padding: "3px 4px", borderBottom: "1px solid #f0f0f0", textAlign: "center" }}>
                             {isEditing ? (
                               <input
                                 autoFocus
@@ -340,21 +390,20 @@ export default function App() {
                                 onChange={e => setEditVal(e.target.value)}
                                 onBlur={commitEdit}
                                 onKeyDown={e => { if (e.key === "Enter") commitEdit(); if (e.key === "Escape") setEditing(null); }}
-                                style={{ width: 82, fontSize: 12, padding: "2px 4px", borderRadius: 4, border: "1px solid var(--color-border-secondary)", background: "var(--color-background-primary)", color: "var(--color-text-primary)" }}
+                                style={{ width: 82, fontSize: 12, padding: "2px 4px", borderRadius: 4, border: "1px solid #aaa" }}
                               />
                             ) : (
                               <div
                                 onClick={() => startEdit(r.id, d, val)}
-                                title={val ? `${val} — click to edit, double-click to copy across week` : "Click to assign"}
                                 onDoubleClick={() => val && copyDayAcrossWeek(r.id, d)}
                                 style={{
                                   minHeight: 26, cursor: "pointer", borderRadius: 5, padding: "3px 5px",
                                   background: filled(val) ? COLORS[catColor].bg : "transparent",
-                                  color: filled(val) ? COLORS[catColor].text : "var(--color-text-secondary)",
-                                  border: filled(val) ? `0.5px solid ${COLORS[catColor].border}` : "0.5px dashed var(--color-border-tertiary)",
+                                  color: filled(val) ? COLORS[catColor].text : "#ccc",
+                                  border: filled(val) ? `0.5px solid ${COLORS[catColor].border}` : "0.5px dashed #ddd",
                                   fontSize: 11, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 90
                                 }}
-                              >{filled(val) ? val : <span style={{ opacity: 0.4 }}>—</span>}</div>
+                              >{filled(val) ? val : "—"}</div>
                             )}
                           </td>
                         );
@@ -368,59 +417,49 @@ export default function App() {
         </div>
       )}
 
-      {/* ── DASHBOARD ── */}
+      {/* DASHBOARD */}
       {tab === 1 && (
         <div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 10, marginBottom: "1.25rem" }}>
-            {[
-              ["Total slots", stats.total, "gray"],
-              ["Filled", stats.filled, "green"],
-              ["Unfilled", stats.empty, stats.empty > 0 ? "red" : "green"],
-            ].map(([l, v, c]) => (
-              <div key={l} style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: "0.75rem", textAlign: "center" }}>
-                <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginBottom: 2 }}>{l}</div>
-                <div style={{ fontSize: 24, fontWeight: 500, color: COLORS[c].text }}>{v}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: "1.25rem" }}>
+            {[["Total slots", stats.total, "#534AB7"],["Filled", stats.filled, "#3B6D11"],["Unfilled", stats.empty, stats.empty > 0 ? "#A32D2D" : "#3B6D11"]].map(([l,v,c]) => (
+              <div key={l} style={{ background: "#f5f5f5", borderRadius: 8, padding: "0.75rem", textAlign: "center" }}>
+                <div style={{ fontSize: 12, color: "#888", marginBottom: 2 }}>{l}</div>
+                <div style={{ fontSize: 24, fontWeight: 600, color: c }}>{v}</div>
               </div>
             ))}
           </div>
-
-          {/* Progress bar */}
-          <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: "0.75rem 1rem", marginBottom: "1rem" }}>
+          <div style={{ background: "#f5f5f5", borderRadius: 8, padding: "0.75rem 1rem", marginBottom: "1rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
-              <span style={{ color: "var(--color-text-secondary)" }}>Overall coverage</span>
-              <span style={{ fontWeight: 500 }}>{stats.pct}%</span>
+              <span style={{ color: "#888" }}>Overall coverage</span>
+              <span style={{ fontWeight: 600 }}>{stats.pct}%</span>
             </div>
-            <div style={{ height: 8, background: "var(--color-border-tertiary)", borderRadius: 4, overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${stats.pct}%`, background: COLORS.green.text, borderRadius: 4, transition: "width 0.4s" }} />
+            <div style={{ height: 8, background: "#ddd", borderRadius: 4, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${stats.pct}%`, background: "#3B6D11", borderRadius: 4 }} />
             </div>
           </div>
-
-          {/* Per-day breakdown */}
-          <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "1rem", marginBottom: "1rem" }}>
-            <div style={{ fontWeight: 500, fontSize: 14, marginBottom: "0.75rem" }}>Coverage by day</div>
+          <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 12, padding: "1rem", marginBottom: "1rem" }}>
+            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: "0.75rem" }}>Coverage by day</div>
             {dayStats.map(ds => (
               <div key={ds.label} style={{ marginBottom: 10 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}>
                   <span>{ds.label}</span>
-                  <span style={{ color: "var(--color-text-secondary)" }}>{ds.f}/{ds.t} · {ds.pct}%</span>
+                  <span style={{ color: "#888" }}>{ds.f}/{ds.t} · {ds.pct}%</span>
                 </div>
-                <div style={{ height: 6, background: "var(--color-border-tertiary)", borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${ds.pct}%`, background: ds.pct === 100 ? COLORS.green.text : ds.pct > 50 ? COLORS.amber.text : COLORS.red.text, borderRadius: 3 }} />
+                <div style={{ height: 6, background: "#eee", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${ds.pct}%`, background: ds.pct === 100 ? "#3B6D11" : ds.pct > 50 ? "#854F0B" : "#A32D2D", borderRadius: 3 }} />
                 </div>
               </div>
             ))}
           </div>
-
-          {/* Unfilled roles */}
-          <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "1rem" }}>
-            <div style={{ fontWeight: 500, fontSize: 14, marginBottom: "0.75rem" }}>Roles needing volunteers</div>
-            {roles.filter(r => DAY_KEYS.some(d => !filled(r.assignments[d]))).slice(0, 15).map(r => {
-              const missingDays = DAY_KEYS.filter(d => !filled(r.assignments[d]));
+          <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 12, padding: "1rem" }}>
+            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: "0.75rem" }}>Roles needing volunteers</div>
+            {roles.filter(r => DAY_KEYS.some(d => !filled(r.assignments[d]))).map(r => {
+              const missing = DAY_KEYS.filter(d => !filled(r.assignments[d]));
               return (
-                <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: "0.5px solid var(--color-border-tertiary)", fontSize: 13 }}>
+                <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: "1px solid #f5f5f5", fontSize: 13 }}>
                   <span style={{ flex: 1 }}>{r.role}</span>
-                  <span style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>{r.start}</span>
-                  <Badge color="red" small>{missingDays.length}d open</Badge>
+                  <span style={{ fontSize: 11, color: "#aaa" }}>{r.start}</span>
+                  <Badge color="red" small>{missing.length}d open</Badge>
                 </div>
               );
             })}
@@ -428,39 +467,34 @@ export default function App() {
         </div>
       )}
 
-      {/* ── REMINDERS ── */}
+      {/* REMINDERS */}
       {tab === 2 && (
         <div>
-          <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "1rem", marginBottom: "1rem" }}>
-            <div style={{ fontWeight: 500, fontSize: 14, marginBottom: "0.5rem" }}>Send shift reminders</div>
-            <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "0 0 1rem" }}>
-              Generate AI-written reminder emails for all volunteers assigned on a given day.
-            </p>
+          <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 12, padding: "1rem", marginBottom: "1rem" }}>
+            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: "0.5rem" }}>Send shift reminders</div>
+            <p style={{ fontSize: 13, color: "#888", margin: "0 0 1rem" }}>Generate AI-written reminder emails for all volunteers assigned on a given day.</p>
             <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: "1rem" }}>
-              <select value={reminderDay} onChange={e => { setReminderDay(e.target.value); setReminderPreviews([]); setReminderSent(false); }} style={{ fontSize: 13 }}>
+              <select value={reminderDay} onChange={e => { setReminderDay(e.target.value); setReminderPreviews([]); setReminderSent(false); }} style={{ fontSize: 13, padding: "5px 8px", borderRadius: 6, border: "1px solid #ddd" }}>
                 {DAY_KEYS.map((d, i) => <option key={d} value={d}>{DAYS[i]}</option>)}
               </select>
-              <button onClick={generateReminders} disabled={reminderLoading} style={{ fontSize: 13, padding: "6px 14px" }}>
+              <button onClick={generateReminders} disabled={reminderLoading} style={{ fontSize: 13, padding: "6px 14px", borderRadius: 6, border: "1px solid #ddd", cursor: "pointer", background: "#fff" }}>
                 {reminderLoading ? "Generating…" : "✦ Generate reminders"}
               </button>
             </div>
           </div>
-
           {reminderPreviews.length > 0 && (
             <div>
-              <div style={{ fontWeight: 500, fontSize: 14, marginBottom: "0.75rem" }}>{reminderPreviews.length} reminder{reminderPreviews.length > 1 ? "s" : ""} for {DAYS[DAY_KEYS.indexOf(reminderDay)]}</div>
+              <div style={{ fontWeight: 600, fontSize: 14, marginBottom: "0.75rem" }}>{reminderPreviews.length} reminder{reminderPreviews.length > 1 ? "s" : ""} for {DAYS[DAY_KEYS.indexOf(reminderDay)]}</div>
               {reminderPreviews.map((p, i) => (
-                <div key={i} style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "1rem", marginBottom: "0.75rem" }}>
-                  <div style={{ fontWeight: 500, fontSize: 13, marginBottom: 2 }}>{p.subject}</div>
-                  <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginBottom: 8 }}>
-                    To: {p.name} · {p.roles.map(r => r.role).join(", ")}
-                  </div>
-                  <div style={{ fontSize: 13, color: "var(--color-text-secondary)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{p.body}</div>
+                <div key={i} style={{ background: "#fff", border: "1px solid #eee", borderRadius: 12, padding: "1rem", marginBottom: "0.75rem" }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>{p.subject}</div>
+                  <div style={{ fontSize: 12, color: "#888", marginBottom: 8 }}>To: {p.name} · {p.roles.map(r => r.role).join(", ")}</div>
+                  <div style={{ fontSize: 13, color: "#555", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{p.body}</div>
                 </div>
               ))}
               {!reminderSent
-                ? <button onClick={sendReminders} style={{ fontSize: 13, padding: "6px 16px" }}>Send all {reminderPreviews.length} reminder{reminderPreviews.length > 1 ? "s" : ""}</button>
-                : <div style={{ fontSize: 13, color: COLORS.green.text, fontWeight: 500 }}>✓ All reminders sent</div>
+                ? <button onClick={sendReminders} style={{ fontSize: 13, padding: "6px 16px", borderRadius: 6, border: "1px solid #ddd", cursor: "pointer", background: "#fff" }}>Send all {reminderPreviews.length} reminder{reminderPreviews.length > 1 ? "s" : ""}</button>
+                : <div style={{ fontSize: 13, color: "#3B6D11", fontWeight: 600 }}>✓ All reminders sent</div>
               }
             </div>
           )}
